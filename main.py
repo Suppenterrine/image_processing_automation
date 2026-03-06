@@ -6,7 +6,10 @@ import os
 # Zielordner für Ausgabe
 os.makedirs("output", exist_ok=True)
 
-def barrel_distortion(img, k1=0.00025, k2=0.00008):
+# k1=0.001   # Subtil sichtbar
+# k1=0.005   # Deutlich fisheye
+# k1=0.02  # Stark (wie GoPro)
+def barrel_distortion(img, k1=0.02, k2=0.00008):
     """Barrel Distortion (Fisheye-Effekt)"""
     h, w = img.shape[:2]
     center = (w//2, h//2)
@@ -26,8 +29,13 @@ def barrel_distortion(img, k1=0.00025, k2=0.00008):
     return cv2.remap(img, map_x_new.astype(np.float32), map_y_new.astype(np.float32), cv2.INTER_LINEAR)
 
 # Bilder aus img/ laden
-img_path = "img/*.jpeg"
-for file in glob.glob(img_path):
+# Bilder aus img/ laden (mehrere Formate)
+extensions = ['*.jpeg', '*.jpg', '*.png']
+all_files = []
+for ext in extensions:
+    all_files.extend(glob.glob(f"img/{ext}"))
+    
+for file in all_files:
     print(f"Lade: {file}")
     
     img = cv2.imread(file)
@@ -45,9 +53,9 @@ for file in glob.glob(img_path):
 
     # 3. Monochromes Filmkorn
     rows, cols, _ = img_blur.shape
-    noise_mono = np.random.normal(0, 8, (rows, cols, 1)).astype(np.uint8)
+    noise_mono = np.random.normal(0, 16, (rows, cols, 1)).astype(np.uint8)
     noise_mono = cv2.cvtColor(noise_mono, cv2.COLOR_GRAY2BGR)
-    img_noisy = cv2.addWeighted(img_blur, 0.95, noise_mono, 0.05, 0)
+    img_noisy = cv2.addWeighted(img_blur, 0.95, noise_mono, 0.15, 0)
 
     # 4. Farbanpassung HSV (Film-Look)
     img_hsv = cv2.cvtColor(img_noisy, cv2.COLOR_BGR2HSV).astype(np.float32)

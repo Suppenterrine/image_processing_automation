@@ -8,5 +8,6 @@ wheels/
 
 # Virtual environments
 .venv
-/img/*.jpeg
-/output/*.jpeg
+img/*
+output/*
+!.gitkeep
