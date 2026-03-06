@@ -102,4 +102,4 @@ result = subprocess.run(
 if result.returncode != 0:
     print(f"ERROR magick command: {result.stderr}")
 else:
-    print("GIF erfolgreich erstellt: output/animation_30.gif")
+    print("GIF erfolgreich erstellt: output/animation.gif")
