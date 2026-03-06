@@ -2,6 +2,7 @@ import glob
 import cv2
 import numpy as np
 import os
+import subprocess
 
 # Zielordner für Ausgabe
 os.makedirs("output", exist_ok=True)
@@ -9,7 +10,7 @@ os.makedirs("output", exist_ok=True)
 # k1=0.001   # Subtil sichtbar
 # k1=0.005   # Deutlich fisheye
 # k1=0.02  # Stark (wie GoPro)
-def barrel_distortion(img, k1=0.02, k2=0.00008):
+def barrel_distortion(img, k1=0.028, k2=0.00008):
     """Barrel Distortion (Fisheye-Effekt)"""
     h, w = img.shape[:2]
     center = (w//2, h//2)
@@ -36,14 +37,14 @@ for ext in extensions:
     all_files.extend(glob.glob(f"img/{ext}"))
     
 for file in all_files:
-    print(f"Lade: {file}")
+    # print(f" LOAD {file}")
     
     img = cv2.imread(file)
     if img is None:
-        print(f"❌ Fehler bei {file}")
+        print(f"ERROR {file}")
         continue
     
-    print(f"✅ Shape: {img.shape}")
+    # print(f"SHAPE {img.shape}")
 
     # 1. Fisheye-Verzerrung
     img_distorted = barrel_distortion(img)
@@ -55,7 +56,7 @@ for file in all_files:
     rows, cols, _ = img_blur.shape
     noise_mono = np.random.normal(0, 16, (rows, cols, 1)).astype(np.uint8)
     noise_mono = cv2.cvtColor(noise_mono, cv2.COLOR_GRAY2BGR)
-    img_noisy = cv2.addWeighted(img_blur, 0.95, noise_mono, 0.15, 0)
+    img_noisy = cv2.addWeighted(img_blur, 0.95, noise_mono, 0.09, 0.85)
 
     # 4. Farbanpassung HSV (Film-Look)
     img_hsv = cv2.cvtColor(img_noisy, cv2.COLOR_BGR2HSV).astype(np.float32)
@@ -68,6 +69,37 @@ for file in all_files:
     success = cv2.imwrite(output_path, img_film)
     
     if success:
-        print(f"💾 Erfolgreich gespeichert: {output_path}")
+        print(f"PROCESSED {base_name}")
     else:
-        print(f"❌ Speichern fehlgeschlagen: {output_path}")
+        print(f"ERROR {base_name}")
+
+print("CONVERT TO GIF")
+# magick -delay 15 -loop 0 *.jpeg animation.gif
+#
+
+# --- Jetzt das magick‑Kommando ausführen (nach der Verarbeitung) ---
+
+# 1. Ordner wechseln oder relative Pfade nutzen
+# Wir gehen in den "output"‑Ordner und erzeugen das GIF aus allen *.jpeg dort.
+cmd = [
+    "magick",
+    "-delay", "15",
+    "-loop", "0",
+    "*.jpeg",
+    "animation.gif"
+]
+
+# Ausführung im output‑Verzeichnis
+result = subprocess.run(
+    cmd,
+    cwd="output",                 # im Ordner "output" ausführen
+    shell=True,                   # unter Windows braucht ImageMagick oft shell=True
+    capture_output=True,
+    text=True
+)
+
+# Ausgabe von Fehler/Info
+if result.returncode != 0:
+    print(f"ERROR magick command: {result.stderr}")
+else:
+    print("GIF erfolgreich erstellt: output/animation_30.gif")
