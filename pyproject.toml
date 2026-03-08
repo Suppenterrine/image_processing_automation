@@ -13,8 +13,8 @@ dependencies = [
 
 [tool.bumpversion]
 current_version = "0.1.2"
-commit = false
-tag = false
+commit = true
+tag = true
 
 [[tool.bumpversion.files]]
 filename = "pyproject.toml"
