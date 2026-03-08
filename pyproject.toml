@@ -10,3 +10,13 @@ dependencies = [
     "pillow>=12.1.1",
     "pyyaml>=6.0.3",
 ]
+
+[tool.bumpversion]
+current_version = "0.1.0"
+commit = false
+tag = false
+
+[[tool.bumpversion.files]]
+filename = "pyproject.toml"
+search = 'version = "{current_version}"'
+replace = 'version = "{new_version}"'
