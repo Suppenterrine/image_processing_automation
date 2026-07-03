@@ -105,33 +105,50 @@ looks:
   gazette:
     type: gazette
 
+    contrast_alpha: 1.25
+    contrast_beta: -10
+    sharpen_amount: 0.3
+
+    grain_amount: 27
+    grain_opacity: 0.24
+    grain_scale: 5
+
+    vignette_strength: 0.22
+
+    paper_tone:
+      enabled: true
+      sepia_amount: 0.8
+
+  gazette_halftone:
+    type: gazette_halftone
+
     contrast_alpha: 1.12
-    contrast_beta: -5
+    contrast_beta: 0
 
     pre_blur:
       enabled: true
-      kernel: 5
-      sigma: 1.0
+      kernel: 3
+      sigma: 0.8
 
     halftone:
       cell_size: 5
       angle: 45
-      dot_gain: 1.0
+      dot_gain: 0.9
 
     soft_blur:
       enabled: true
       kernel: 3
-      sigma: 0.35
+      sigma: 0.2
 
     paper_tone:
-      enabled: true
-      sepia_amount: 0.12
+      enabled: false
+      sepia_amount: 0.0
 
     grain:
       enabled: true
-      amount: 10
-      opacity: 0.12
+      amount: 6
+      opacity: 0.06
 
     vignette:
       enabled: true
-      strength: 0.24
+      strength: 0.08

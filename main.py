@@ -3,6 +3,7 @@ import glob
 import os
 import random
 import subprocess
+import sys
 from pathlib import Path
 
 import cv2
@@ -172,6 +173,61 @@ def tri_x_pushed(img: np.ndarray, cfg: dict) -> np.ndarray:
     return clip_uint8(out)
 
 
+def add_coarse_grain(img: np.ndarray, amount: float = 20.0, opacity: float = 0.22, scale: int = 4) -> np.ndarray:
+    """
+    Gröberes, klumpiges Filmkorn: das Rauschen wird in reduzierter Auflösung
+    erzeugt und wieder hochskaliert, statt pixelweise — dadurch entstehen
+    größere, weichere Körner statt feines Pixelrauschen.
+    """
+    img_f = img.astype(np.float32)
+    h, w = img.shape[:2]
+    small_h, small_w = max(1, h // scale), max(1, w // scale)
+
+    noise_small = np.random.normal(0.0, amount, (small_h, small_w)).astype(np.float32)
+    noise = cv2.resize(noise_small, (w, h), interpolation=cv2.INTER_CUBIC)
+    noise = np.repeat(noise[:, :, np.newaxis], 3, axis=2)
+
+    grain_layer = img_f + noise
+    out = cv2.addWeighted(img_f, 1.0 - opacity, grain_layer, opacity, 0.0)
+    return clip_uint8(out)
+
+
+def gazette(img: np.ndarray, cfg: dict) -> np.ndarray:
+    """
+    Annäherung an alte Zeitungsfotos (19./frühes 20. Jhd.): wie tri_x_pushed,
+    aber mit weicherer Schärfung und deutlich gröberem, klumpigem Korn statt
+    feinem Pixelrauschen oder sichtbarem Druckraster — echte Abzüge dieser Ära
+    wirkten körnig-weich, nicht wie ein aufgelöstes Halbtonmuster.
+    """
+    out = to_bw(img)
+
+    out = add_contrast(
+        out,
+        alpha=float(cfg.get("contrast_alpha", 1.25)),
+        beta=float(cfg.get("contrast_beta", -10))
+    )
+
+    sharpen_amount = float(cfg.get("sharpen_amount", 0.3))
+    if sharpen_amount:
+        blur = cv2.GaussianBlur(out, (0, 0), 1.0)
+        out = cv2.addWeighted(out, 1.0 + sharpen_amount, blur, -sharpen_amount, 0)
+
+    out = add_coarse_grain(
+        out,
+        amount=float(cfg.get("grain_amount", 22)),
+        opacity=float(cfg.get("grain_opacity", 0.24)),
+        scale=int(cfg.get("grain_scale", 4))
+    )
+
+    paper_cfg = cfg.get("paper_tone", {})
+    if paper_cfg.get("enabled", False):
+        out = apply_paper_tone(out, float(paper_cfg.get("sepia_amount", 0.12)))
+
+    out = add_vignette(out, float(cfg.get("vignette_strength", 0.22)))
+
+    return clip_uint8(out)
+
+
 def make_halftone(gray: np.ndarray, cell_size: int = 6, angle: float = 45.0, dot_gain: float = 1.15) -> np.ndarray:
     """
     Klassischer Winkel-Halbtonraster (wie im Zeitungsdruck): das Bild wird
@@ -225,31 +281,29 @@ def apply_paper_tone(img: np.ndarray, amount: float = 0.12) -> np.ndarray:
     return clip_uint8(out)
 
 
-def gazette(img: np.ndarray, cfg: dict) -> np.ndarray:
+def gazette_halftone(img: np.ndarray, cfg: dict) -> np.ndarray:
     """
-    Annäherung an den Zeitungsdruck-Look des 19. Jhd.: harter Kontrast,
-    gedrehtes Halbtonraster (statt sanftem SW-Foto), leichte Papiertönung,
-    Korn und Vignette. Kein physikalisch exakter Druck-Emulator, aber deutlich
-    näher am Presseabzug als ein reines Kontrast-SW-Bild.
+    Variante mit echtem gedrehtem Halbtonraster (statt sanftem SW-Korn wie bei
+    `gazette`) — sichtbares Druckpunktmuster wie im klassischen Zeitungsdruck.
     """
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     gray = clip_uint8(
-        gray.astype(np.float32) * float(cfg.get("contrast_alpha", 1.3))
-        + float(cfg.get("contrast_beta", -10))
+        gray.astype(np.float32) * float(cfg.get("contrast_alpha", 1.12))
+        + float(cfg.get("contrast_beta", 0))
     )
 
     pre_blur_cfg = cfg.get("pre_blur", {})
     if pre_blur_cfg.get("enabled", False):
         k = ensure_odd(int(pre_blur_cfg.get("kernel", 3)))
-        gray = cv2.GaussianBlur(gray, (k, k), float(pre_blur_cfg.get("sigma", 0.6)))
+        gray = cv2.GaussianBlur(gray, (k, k), float(pre_blur_cfg.get("sigma", 0.8)))
 
     halftone_cfg = cfg.get("halftone", {})
     dotted = make_halftone(
         gray,
-        cell_size=int(halftone_cfg.get("cell_size", 6)),
+        cell_size=int(halftone_cfg.get("cell_size", 5)),
         angle=float(halftone_cfg.get("angle", 45.0)),
-        dot_gain=float(halftone_cfg.get("dot_gain", 1.15)),
+        dot_gain=float(halftone_cfg.get("dot_gain", 0.9)),
     )
 
     out = cv2.cvtColor(dotted, cv2.COLOR_GRAY2BGR)
@@ -257,7 +311,7 @@ def gazette(img: np.ndarray, cfg: dict) -> np.ndarray:
     soft_blur_cfg = cfg.get("soft_blur", {})
     if soft_blur_cfg.get("enabled", False):
         k = ensure_odd(int(soft_blur_cfg.get("kernel", 3)))
-        out = cv2.GaussianBlur(out, (k, k), float(soft_blur_cfg.get("sigma", 0.4)))
+        out = cv2.GaussianBlur(out, (k, k), float(soft_blur_cfg.get("sigma", 0.2)))
 
     paper_cfg = cfg.get("paper_tone", {})
     if paper_cfg.get("enabled", False):
@@ -267,13 +321,13 @@ def gazette(img: np.ndarray, cfg: dict) -> np.ndarray:
     if grain_cfg.get("enabled", False):
         out = add_monochrome_grain(
             out,
-            amount=float(grain_cfg.get("amount", 10)),
-            opacity=float(grain_cfg.get("opacity", 0.12))
+            amount=float(grain_cfg.get("amount", 6)),
+            opacity=float(grain_cfg.get("opacity", 0.06))
         )
 
     vig_cfg = cfg.get("vignette", {})
     if vig_cfg.get("enabled", False):
-        out = add_vignette(out, float(vig_cfg.get("strength", 0.22)))
+        out = add_vignette(out, float(vig_cfg.get("strength", 0.08)))
 
     return clip_uint8(out)
 
@@ -421,6 +475,9 @@ def main():
         elif look_type == "gazette":
             out = gazette(img, look_cfg)
             out = maybe_motion_blur(out, look_cfg, rng)
+        elif look_type == "gazette_halftone":
+            out = gazette_halftone(img, look_cfg)
+            out = maybe_motion_blur(out, look_cfg, rng)
         else:
             out = apply_standard_pipeline(img, look_cfg, rng)
 
@@ -432,4 +489,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\nAbgebrochen (Strg+C).")
+        sys.exit(130)
