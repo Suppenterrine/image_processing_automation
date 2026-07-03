@@ -101,3 +101,37 @@ looks:
       length_max: 11
       angle_min: 0
       angle_max: 180
+
+  gazette:
+    type: gazette
+
+    contrast_alpha: 1.12
+    contrast_beta: -5
+
+    pre_blur:
+      enabled: true
+      kernel: 5
+      sigma: 1.0
+
+    halftone:
+      cell_size: 5
+      angle: 45
+      dot_gain: 1.0
+
+    soft_blur:
+      enabled: true
+      kernel: 3
+      sigma: 0.35
+
+    paper_tone:
+      enabled: true
+      sepia_amount: 0.12
+
+    grain:
+      enabled: true
+      amount: 10
+      opacity: 0.12
+
+    vignette:
+      enabled: true
+      strength: 0.24
