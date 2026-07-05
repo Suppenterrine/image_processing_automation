@@ -1,0 +1,23 @@
+type: tri_x_pushed
+
+contrast:
+  alpha: 1.28
+  beta: -10
+
+sharpen:
+  amount: 0.35
+
+grain:
+  amount: 26
+  opacity: 0.20
+
+vignette:
+  strength: 0.16
+
+motion_blur:
+  enabled: true
+  chance: 0.75
+  length_min: 3
+  length_max: 11
+  angle_min: 0
+  angle_max: 180

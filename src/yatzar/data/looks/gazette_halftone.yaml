@@ -1,0 +1,36 @@
+type: gazette_halftone
+
+contrast:
+  alpha: 1.12
+  beta: 0
+
+pre_blur:
+  enabled: true
+  kernel: 3
+  sigma: 0.8
+
+halftone:
+  cell_size: 5
+  angle: 45
+  dot_gain: 0.9
+
+soft_blur:
+  enabled: true
+  kernel: 3
+  sigma: 0.2
+
+paper_tone:
+  enabled: false
+  sepia_amount: 0.0
+
+grain:
+  enabled: true
+  amount: 6
+  opacity: 0.06
+
+vignette:
+  enabled: true
+  strength: 0.08
+
+motion_blur:
+  enabled: false

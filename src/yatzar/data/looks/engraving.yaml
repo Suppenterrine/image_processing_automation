@@ -1,0 +1,52 @@
+type: engraving
+
+reference_width: 1600
+
+pre_blur:
+  enabled: true
+  kernel: 5
+  sigma: 1.6
+
+tensor:
+  sigma_grad: 3.0
+  sigma_tensor: 14.0
+  default_angle: 45
+  coherence_floor: 0.15
+  coherence_gamma: 2.0
+  energy_floor: 0.18
+  flow_smooth_sigma: 0.0
+
+tone_blur:
+  kernel: 5
+  sigma: 1.2
+
+hatch:
+  pitch: 6
+  white_threshold: 0.86
+  crosshatch_threshold: 0.45
+  black_threshold: 0.12
+  max_duty: 0.55
+  max_duty_cross: 0.5
+  max_duty_deep: 0.6
+
+outline:
+  enabled: true
+  low: 60
+  high: 150
+  thickness: 1
+
+paper_tone:
+  enabled: true
+  sepia_amount: 0.08
+
+grain:
+  enabled: false
+  amount: 5
+  opacity: 0.05
+
+vignette:
+  enabled: true
+  strength: 0.10
+
+motion_blur:
+  enabled: false

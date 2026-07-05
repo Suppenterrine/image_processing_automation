@@ -1,0 +1,23 @@
+type: gazette
+
+contrast:
+  alpha: 1.25
+  beta: -10
+
+sharpen:
+  amount: 0.3
+
+grain:
+  amount: 27
+  opacity: 0.24
+  scale: 5
+
+vignette:
+  strength: 0.22
+
+paper_tone:
+  enabled: true
+  sepia_amount: 0.1
+
+motion_blur:
+  enabled: false
