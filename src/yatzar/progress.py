@@ -39,6 +39,7 @@ def run_with_progress(
     batch_size: int,
     workers: int | None,
     no_parallel: bool,
+    overwrite: bool = False,
 ) -> tuple[int, list[tuple[Path, str]]]:
     """Verarbeitet alle Dateien mit Live-Fortschrittsanzeige. Gibt (Anzahl gespeichert, Fehler) zurück."""
     effective_batch_size = len(files) if no_parallel else batch_size
@@ -47,11 +48,11 @@ def run_with_progress(
 
     console = Console()
     if len(batches) <= 1:
-        return _run_sequential(batches, look_name, look_cfg, output_dir, seed, ext, console)
-    return _run_parallel(batches, look_name, look_cfg, output_dir, seed, ext, workers, console)
+        return _run_sequential(batches, look_name, look_cfg, output_dir, seed, ext, console, overwrite=overwrite)
+    return _run_parallel(batches, look_name, look_cfg, output_dir, seed, ext, workers, console, overwrite=overwrite)
 
 
-def _run_sequential(batches, look_name, look_cfg, output_dir, seed, ext, console: Console) -> tuple[int, list]:
+def _run_sequential(batches, look_name, look_cfg, output_dir, seed, ext, console: Console, overwrite: bool = False) -> tuple[int, list]:
     if not batches:
         return 0, []
 
@@ -59,14 +60,14 @@ def _run_sequential(batches, look_name, look_cfg, output_dir, seed, ext, console
     state: dict = {}
     with Progress(*_COLUMNS, console=console) as progress:
         task_id = progress.add_task(look_name, total=len(files))
-        result = process_batch(files, look_name, look_cfg, output_dir, seed, 0, ext, state)
+        result = process_batch(files, look_name, look_cfg, output_dir, seed, 0, ext, state, overwrite=overwrite)
         progress.update(task_id, completed=state[0]["completed"], total=state[0]["total"])
 
     _print_errors(console, result.errors)
     return len(result.saved), result.errors
 
 
-def _run_parallel(batches, look_name, look_cfg, output_dir, seed, ext, workers, console: Console) -> tuple[int, list]:
+def _run_parallel(batches, look_name, look_cfg, output_dir, seed, ext, workers, console: Console, overwrite: bool = False) -> tuple[int, list]:
     num_workers = decide_workers(len(batches), workers)
 
     with Manager() as manager:
@@ -80,7 +81,7 @@ def _run_parallel(batches, look_name, look_cfg, output_dir, seed, ext, workers, 
             with ProcessPoolExecutor(max_workers=num_workers) as executor:
                 futures = [
                     executor.submit(
-                        process_batch, batch_files, look_name, look_cfg, output_dir, seed, batch_id, ext, shared
+                        process_batch, batch_files, look_name, look_cfg, output_dir, seed, batch_id, ext, shared, overwrite
                     )
                     for batch_id, batch_files in enumerate(batches)
                 ]

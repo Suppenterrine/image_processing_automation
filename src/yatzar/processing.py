@@ -28,6 +28,7 @@ def process_batch(
     batch_id: int,
     ext: str,
     progress_state,
+    overwrite: bool = False,
 ) -> BatchResult:
     look_fn = looks.get(look_cfg["type"])
     rng = random.Random(seed + batch_id) if seed is not None else random.Random()
@@ -41,7 +42,7 @@ def process_batch(
             if img is None:
                 raise ValueError("Bild konnte nicht geladen werden")
             out = look_fn(img, look_cfg, rng)
-            saved = io_utils.save_image(output_dir, look_name, file_path, out, ext=ext)
+            saved = io_utils.save_image(output_dir, look_name, file_path, out, ext=ext, overwrite=overwrite)
             result.saved.append(saved)
         except Exception as exc:
             result.errors.append((file_path, str(exc)))

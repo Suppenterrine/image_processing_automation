@@ -4,9 +4,8 @@ from typing import Optional
 import typer
 from rich.console import Console
 
-from yatzar import gif as gif_module
-from yatzar import io_utils, looks
-from yatzar.config import default_looks_dir, load_look_configs
+from yatzar import gif as gif_module, io_utils, looks
+from yatzar.config import default_looks_dir, load_look_configs, validate_look_config
 from yatzar.progress import run_with_progress
 
 console = Console()
@@ -23,6 +22,7 @@ def apply_command(
     workers: Optional[int] = typer.Option(None, "--workers", help="Anzahl paralleler Worker (Default: CPU-Kerne, gedeckelt durch Batch-Anzahl)"),
     no_parallel: bool = typer.Option(False, "--no-parallel", help="Erzwingt sequentielle Verarbeitung ohne Batching"),
     ext: str = typer.Option(".jpg", "--ext", help="Dateiendung der Ausgabebilder"),
+    overwrite: bool = typer.Option(False, "--overwrite", help="Existierende Ausgabedateien überschreiben, statt sie umzubenennen"),
 ) -> None:
     """Wendet einen Look auf alle Bilder in INPUT_DIR an."""
     configs = load_look_configs(looks_dir or default_looks_dir())
@@ -32,6 +32,13 @@ def apply_command(
         raise typer.Exit(code=1)
 
     look_cfg = configs[look]
+    validation_errors = validate_look_config(look, look_cfg)
+    if validation_errors:
+        console.print(f"[red]Look '{look}' ist ungültig:[/red]")
+        for err in validation_errors:
+            console.print(f"  • {err}")
+        raise typer.Exit(code=1)
+
     looks.get(look_cfg["type"])  # früh validieren, dass der Typ registriert ist
 
     input_files = io_utils.collect_input_files(input_dir)
@@ -52,6 +59,7 @@ def apply_command(
         batch_size=batch_size,
         workers=workers,
         no_parallel=no_parallel,
+        overwrite=overwrite,
     )
 
     console.print(f"[green]{saved_count}[/green] Bilder gespeichert in '{output_dir}'.")

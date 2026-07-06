@@ -96,6 +96,7 @@ def gazette_halftone(img: np.ndarray, cfg: dict, rng: random.Random) -> np.ndarr
             out,
             amount=float(grain_cfg.get("amount", 6)),
             opacity=float(grain_cfg.get("opacity", 0.06)),
+            rng=rng,
         )
 
     vig_cfg = cfg.get("vignette", {})

@@ -90,12 +90,16 @@ def unsharp_mask(img: np.ndarray, amount: float, sigma: float = 1.0) -> np.ndarr
     return cv2.addWeighted(img, 1.0 + amount, blur, -amount, 0)
 
 
-def add_monochrome_grain(img: np.ndarray, amount: float = 16.0, opacity: float = 0.10) -> np.ndarray:
+def add_monochrome_grain(img: np.ndarray, amount: float = 16.0, opacity: float = 0.10, rng: random.Random | None = None) -> np.ndarray:
     """Monochrome film grain without uint8 wraparound."""
     img_f = img.astype(np.float32)
     h, w = img.shape[:2]
-
-    noise = np.random.normal(0.0, amount, (h, w, 1)).astype(np.float32)
+    rng = rng or random.Random()
+    noise = np.array(
+        [[rng.normalvariate(0.0, amount) for _ in range(w)] for _ in range(h)],
+        dtype=np.float32,
+    )
+    noise = noise[:, :, np.newaxis]
     noise = np.repeat(noise, 3, axis=2)
 
     grain_layer = img_f + noise
@@ -103,7 +107,7 @@ def add_monochrome_grain(img: np.ndarray, amount: float = 16.0, opacity: float =
     return clip_uint8(out)
 
 
-def add_coarse_grain(img: np.ndarray, amount: float = 20.0, opacity: float = 0.22, scale: int = 4) -> np.ndarray:
+def add_coarse_grain(img: np.ndarray, amount: float = 20.0, opacity: float = 0.22, scale: int = 4, rng: random.Random | None = None) -> np.ndarray:
     """
     Gröberes, klumpiges Filmkorn: das Rauschen wird in reduzierter Auflösung
     erzeugt und wieder hochskaliert, statt pixelweise — dadurch entstehen
@@ -113,14 +117,18 @@ def add_coarse_grain(img: np.ndarray, amount: float = 20.0, opacity: float = 0.2
     h, w = img.shape[:2]
     small_h, small_w = max(1, h // scale), max(1, w // scale)
 
-    noise_small = np.random.normal(0.0, amount, (small_h, small_w)).astype(np.float32)
+    rng = rng or random.Random()
+    noise_small = np.array(
+        [[rng.normalvariate(0.0, amount) for _ in range(small_w)] for _ in range(small_h)],
+        dtype=np.float32,
+    )
     noise = cv2.resize(noise_small, (w, h), interpolation=cv2.INTER_CUBIC)
-    noise = np.repeat(noise[:, :, np.newaxis], 3, axis=2)
+    noise = noise[:, :, np.newaxis]
+    noise = np.repeat(noise, 3, axis=2)
 
     grain_layer = img_f + noise
     out = cv2.addWeighted(img_f, 1.0 - opacity, grain_layer, opacity, 0.0)
     return clip_uint8(out)
-
 
 def adjust_hsv(img: np.ndarray, sat_mult: float = 1.0, val_mult: float = 1.0) -> np.ndarray:
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV).astype(np.float32)

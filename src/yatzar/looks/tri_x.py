@@ -29,6 +29,7 @@ def tri_x_pushed(img: np.ndarray, cfg: dict, rng: random.Random) -> np.ndarray:
         out,
         amount=float(grain_cfg.get("amount", 22)),
         opacity=float(grain_cfg.get("opacity", 0.18)),
+        rng=rng,
     )
 
     vignette_strength = float(cfg.get("vignette", {}).get("strength", 0.18))

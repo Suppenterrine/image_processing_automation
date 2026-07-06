@@ -33,6 +33,7 @@ def gazette(img: np.ndarray, cfg: dict, rng: random.Random) -> np.ndarray:
         amount=float(grain_cfg.get("amount", 22)),
         opacity=float(grain_cfg.get("opacity", 0.24)),
         scale=int(grain_cfg.get("scale", 4)),
+        rng=rng,
     )
 
     paper_cfg = cfg.get("paper_tone", {})

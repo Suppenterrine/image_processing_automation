@@ -190,6 +190,7 @@ def engraving(img: np.ndarray, cfg: dict, rng: random.Random) -> np.ndarray:
             out,
             amount=float(grain_cfg.get("amount", 5)),
             opacity=float(grain_cfg.get("opacity", 0.05)),
+            rng=rng,
         )
 
     vig_cfg = cfg.get("vignette", {})

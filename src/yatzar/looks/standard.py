@@ -34,6 +34,7 @@ def standard(img: np.ndarray, cfg: dict, rng: random.Random) -> np.ndarray:
             out,
             amount=float(grain_cfg.get("amount", 16)),
             opacity=float(grain_cfg.get("opacity", 0.10)),
+            rng=rng,
         )
 
     color_cfg = cfg.get("color", {})
