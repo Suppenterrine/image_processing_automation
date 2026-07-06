@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "yatzar"
-version = "0.2.0"
+version = "0.3.0"
 description = "CLI-Pipeline für konfigurierbare, ästhetische Bild-Looks mit paralleler Batch-Verarbeitung"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -28,7 +28,7 @@ yatzar = "yatzar.cli.app:main"
 packages = ["src/yatzar"]
 
 [tool.bumpversion]
-current_version = "0.2.0"
+current_version = "0.3.0"
 commit = true
 tag = true
 
