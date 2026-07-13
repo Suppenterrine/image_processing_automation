@@ -1,0 +1,38 @@
+type: standard
+
+barrel_distortion:
+  enabled: true
+  k1: 0.03
+  k2: 0.00009
+
+gaussian_blur:
+  enabled: true
+  kernel: 15
+  sigma: 1.55
+
+motion_blur:
+  enabled: true
+  chance: 0.72
+  length_min: 6
+  length_max: 19
+  angle_min: -15
+  angle_max: 15
+
+grain:
+  enabled: true
+  amount: 19
+  opacity: 0.14
+
+color:
+  enabled: true
+  sat_mult: 0.82
+  val_mult: 1.0
+
+tone:
+  enabled: true
+  alpha: 1.06
+  beta: -2
+
+vignette:
+  enabled: true
+  strength: 0.2

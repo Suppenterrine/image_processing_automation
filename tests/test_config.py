@@ -1,4 +1,7 @@
 import pytest
+import yaml
+
+from pathlib import Path
 
 from yatzar.config import validate_look_config
 
@@ -39,3 +42,31 @@ def test_effect_block_enabled_must_be_bool():
 def test_root_must_be_mapping():
     errors = validate_look_config("film_soft", "bad")
     assert errors != []
+
+
+def test_tri_x_pushed_preset_has_enabled_flags():
+    path = Path("src/yatzar/data/looks/tri_x_pushed.yaml")
+    cfg = yaml.safe_load(path.read_text(encoding="utf-8"))
+    errors = validate_look_config("tri_x_pushed", cfg)
+    assert errors == []
+
+
+def test_film_profile_presets_validate():
+    preset_paths = [
+        "src/yatzar/data/looks/kodak_vision3_2383_print.yaml",
+        "src/yatzar/data/looks/kodak_vision3_5219.yaml",
+        "src/yatzar/data/looks/kodak_5247.yaml",
+        "src/yatzar/data/looks/kodak_ektachrome.yaml",
+        "src/yatzar/data/looks/kodak_portra.yaml",
+        "src/yatzar/data/looks/fujifilm_eterna.yaml",
+        "src/yatzar/data/looks/fujifilm_velvia.yaml",
+        "src/yatzar/data/looks/kodak_tri_x_400.yaml",
+        "src/yatzar/data/looks/cinestill_800t.yaml",
+    ]
+
+    for path_str in preset_paths:
+        path = Path(path_str)
+        assert path.exists(), f"Preset fehlt: {path_str}"
+        cfg = yaml.safe_load(path.read_text(encoding="utf-8"))
+        errors = validate_look_config(path.stem, cfg)
+        assert errors == [], f"Preset {path_str} ist ungültig: {errors}"

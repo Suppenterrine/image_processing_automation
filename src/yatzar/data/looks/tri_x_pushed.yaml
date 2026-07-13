@@ -8,10 +8,12 @@ sharpen:
   amount: 0.35
 
 grain:
+  enabled: true
   amount: 26
   opacity: 0.20
 
 vignette:
+  enabled: true
   strength: 0.16
 
 motion_blur:

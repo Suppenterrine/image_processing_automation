@@ -1,6 +1,7 @@
 """Laden von Look-Presets aus einem Verzeichnis mit einer YAML-Datei pro Look."""
 
 from importlib import resources
+from importlib.abc import Traversable
 from pathlib import Path
 
 import yaml
@@ -8,7 +9,7 @@ import yaml
 from yatzar.looks import available as look_types
 
 
-def default_looks_dir() -> Path:
+def default_looks_dir() -> Traversable:
     return resources.files("yatzar.data.looks")
 
 
